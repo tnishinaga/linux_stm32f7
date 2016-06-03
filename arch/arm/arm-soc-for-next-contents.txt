@@ -1,0 +1,39 @@
+fixes
+	patch
+		arm64: dts: drop "arm,amba-bus" in favor of "simple-bus" part 2
+	<no branch> (8a6f71ccb6c39ca5ae442d1478d3a076e2b1361e)
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-fixes-4.7
+	patch
+		ARM: dts: sunxi: Add OLinuXino Lime2 eMMC to the Makefile
+	<no branch> (65db875d110b8e517f81fa71c57a65fc6d0019ac)
+		git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap tags/omap-for-v4.7/fixes-v2
+	<no branch> (a1f6ad14176d466c00e6a687f9c78ec6c7ad6bf8)
+		git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap tags/omap-for-v4.7-dts-fixes1
+	patch
+		ARM: dts: sun6i: primo81: Drop constraints on dc1sw regulator
+		ARM: dts: sun6i: yones-toptech-bs1078-v2: Drop constraints on dc1sw regulator
+
+next/fixes-non-critical
+
+next/cleanup
+	patch
+		ARM: uniphier: drop code for old DT binding
+		ARM: do away with ARCH_[WANT_OPTIONAL|REQUIRE]_GPIOLIB
+
+next/soc
+
+next/arm64
+	patch
+		arm64: defconfig: Enable Cadence MACB/GEM support
+
+next/dt
+
+next/dt64
+	patch
+		arm64: dts: Add dts files for LG Electronics's lg1313 SoC
+
+next/defconfig
+
+next/drivers
+	reset/for-4.8
+		git://git.pengutronix.de/git/pza/linux tags/reset-for-4.8
