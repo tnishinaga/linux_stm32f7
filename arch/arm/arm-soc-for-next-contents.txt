@@ -12,6 +12,12 @@ fixes
 	patch
 		ARM: dts: sun6i: primo81: Drop constraints on dc1sw regulator
 		ARM: dts: sun6i: yones-toptech-bs1078-v2: Drop constraints on dc1sw regulator
+	<no branch> (c106c21ce02e366f3dc887bff7c48f3f140c45c9)
+		git://git.kernel.org/pub/scm/linux/kernel/git/dinguyen/linux tags/socfpga_fix_for_v4.7
+	patch
+		MAINTAINERS: Add myself as reviewer of ARM FSL/NXP
+	<no branch> (a7d7865fecd83adb98b20eca5eddef7efc94831d)
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-fixes-4.7-2
 
 next/fixes-non-critical
 
@@ -19,21 +25,46 @@ next/cleanup
 	patch
 		ARM: uniphier: drop code for old DT binding
 		ARM: do away with ARCH_[WANT_OPTIONAL|REQUIRE]_GPIOLIB
+	samsung/soc
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-soc-4.8
 
 next/soc
+	renesas/soc
+		git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas tags/renesas-soc-for-v4.8
 
 next/arm64
 	patch
 		arm64: defconfig: Enable Cadence MACB/GEM support
+	samsung/soc64
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-soc64-4.8
 
 next/dt
+	samsung/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-dt-4.8
+	samsung/dt-odroid-xu
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-dt-odroid-xu-4.8
+	renesas/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas tags/renesas-dt-for-v4.8
+	ux500/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-stericsson tags/ux500-dt-asoc-1
+	socfpga/updates
+		git://git.kernel.org/pub/scm/linux/kernel/git/dinguyen/linux tags/socfpga_updates_v4.8
 
 next/dt64
 	patch
 		arm64: dts: Add dts files for LG Electronics's lg1313 SoC
+	renesas/arm64-dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas tags/renesas-arm64-dt-for-v4.8
 
 next/defconfig
+	samsung/defconfig
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-defconfig-4.8
 
 next/drivers
 	reset/for-4.8
 		git://git.pengutronix.de/git/pza/linux tags/reset-for-4.8
+	samsung/drivers
+		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-drivers-4.8
+	renesas/rcar-sysc
+		git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas tags/renesas-rcar-sysc-for-v4.8
+
