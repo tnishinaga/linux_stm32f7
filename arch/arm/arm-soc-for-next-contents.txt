@@ -37,6 +37,8 @@ next/cleanup
 		ARM: do away with ARCH_[WANT_OPTIONAL|REQUIRE]_GPIOLIB
 	samsung/soc
 		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-soc-4.8
+	vexpress/fixes
+		git://git.kernel.org/pub/scm/linux/kernel/git/sudeep.holla/linux tags/vexpress-fixes-4.8
 
 next/soc
 	renesas/soc
@@ -57,6 +59,8 @@ next/arm64
 		git://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-amlogic tags/amlogic-soc
 	brcm/arm64
 		http://github.com/Broadcom/stblinux tags/arm-soc/for-4.8/soc-arm64
+	patch
+		arm64: Kconfig: select PM{,_GENERIC_DOMAINS} for ARCH_VEXPRESS
 
 next/dt
 	samsung/dt
