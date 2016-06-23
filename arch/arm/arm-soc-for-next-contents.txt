@@ -61,6 +61,8 @@ next/arm64
 		http://github.com/Broadcom/stblinux tags/arm-soc/for-4.8/soc-arm64
 	patch
 		arm64: Kconfig: select PM{,_GENERIC_DOMAINS} for ARCH_VEXPRESS
+	patch:
+		arm64: defconfig: enable stmmac and realtek PHY as modules
 
 next/dt
 	samsung/dt
