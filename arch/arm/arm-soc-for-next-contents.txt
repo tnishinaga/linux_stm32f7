@@ -1,33 +1,6 @@
 fixes
-	patch
-		arm64: dts: drop "arm,amba-bus" in favor of "simple-bus" part 2
-	<no branch> (8a6f71ccb6c39ca5ae442d1478d3a076e2b1361e)
-		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-fixes-4.7
-	patch
-		ARM: dts: sunxi: Add OLinuXino Lime2 eMMC to the Makefile
-	<no branch> (65db875d110b8e517f81fa71c57a65fc6d0019ac)
-		git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap tags/omap-for-v4.7/fixes-v2
-	<no branch> (a1f6ad14176d466c00e6a687f9c78ec6c7ad6bf8)
-		git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap tags/omap-for-v4.7-dts-fixes1
-	patch
-		ARM: dts: sun6i: primo81: Drop constraints on dc1sw regulator
-		ARM: dts: sun6i: yones-toptech-bs1078-v2: Drop constraints on dc1sw regulator
-	<no branch> (c106c21ce02e366f3dc887bff7c48f3f140c45c9)
-		git://git.kernel.org/pub/scm/linux/kernel/git/dinguyen/linux tags/socfpga_fix_for_v4.7
-	patch
-		MAINTAINERS: Add myself as reviewer of ARM FSL/NXP
-	<no branch> (a7d7865fecd83adb98b20eca5eddef7efc94831d)
-		git://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-fixes-4.7-2
-	<no branch> (20c15226d1c73150c4d9107301cac5dda0b7f995)
-		git://git.kernel.org/pub/scm/linux/kernel/git/shawnguo/linux tags/imx-fixes-4.7
-	patch
-		ARM: dts: STi: stih407-family: Disable reserved-memory co-processor nodes
-	<no branch> (d279f7a7e95af6bb4b5eaea3527d1f85a28c5cf6)
-		git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap tags/fixes-rcu-fiq-signed
-	<no branch> (6b41d44862e8f3a4b95102c6ff6cad3fccc7994b)
-		git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap tags/omap-for-v4.7/fixes-powedomain
-	<no branch> (8f50b8e57442d28e41bb736c173d8a2490549a82)
-		https://github.com/rogerq/linux tags/gpmc-omap-fixes-for-v4.7
+	<no branch> (929e604efa3dc0522214e0dc18984be23993e9f0)
+		git://git.infradead.org/linux-mvebu tags/mvebu-fixes-4.7-1
 
 next/fixes-non-critical
 
@@ -61,7 +34,6 @@ next/arm64
 		http://github.com/Broadcom/stblinux tags/arm-soc/for-4.8/soc-arm64
 	patch
 		arm64: Kconfig: select PM{,_GENERIC_DOMAINS} for ARCH_VEXPRESS
-	patch:
 		arm64: defconfig: enable stmmac and realtek PHY as modules
 
 next/dt
