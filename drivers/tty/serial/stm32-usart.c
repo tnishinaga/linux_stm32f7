@@ -10,6 +10,7 @@
 #define SUPPORT_SYSRQ
 #endif
 
+
 #include <linux/module.h>
 #include <linux/serial.h>
 #include <linux/console.h>
@@ -30,13 +31,24 @@
 #define DRIVER_NAME "stm32-usart"
 
 /* Register offsets */
-#define USART_SR		0x00
-#define USART_DR		0x04
-#define USART_BRR		0x08
-#define USART_CR1		0x0c
-#define USART_CR2		0x10
-#define USART_CR3		0x14
-#define USART_GTPR		0x18
+#if CONFIG_MACH_STM32F746
+#define USART_CR1		0x00
+#define USART_CR2		0x04
+#define USART_CR3		0x08
+#define USART_BRR		0x0C
+#define USART_GTPR	0x10
+#define USART_SR		0x1C
+#define USART_RDR		0x24
+#define USART_TDR		0x28
+#else
+#define USART_SR               0x00
+#define USART_DR               0x04
+#define USART_BRR              0x08
+#define USART_CR1              0x0c
+#define USART_CR2              0x10
+#define USART_CR3              0x14
+#define USART_GTPR             0x18
+#endif
 
 /* USART_SR */
 #define USART_SR_PE		BIT(0)
@@ -63,8 +75,13 @@
 #define USART_BRR_DIV_M_SHIFT	4
 
 /* USART_CR1 */
+#if CONFIG_MACH_STM32F746
+#define USART_CR1_UE		BIT(0)
+#else
 #define USART_CR1_SBK		BIT(0)
 #define USART_CR1_RWU		BIT(1)
+#define USART_CR1_UE		BIT(13)
+#endif
 #define USART_CR1_RE		BIT(2)
 #define USART_CR1_TE		BIT(3)
 #define USART_CR1_IDLEIE	BIT(4)
@@ -76,7 +93,6 @@
 #define USART_CR1_PCE		BIT(10)
 #define USART_CR1_WAKE		BIT(11)
 #define USART_CR1_M		BIT(12)
-#define USART_CR1_UE		BIT(13)
 #define USART_CR1_OVER8		BIT(15)
 #define USART_CR1_IE_MASK	GENMASK(8, 4)
 
@@ -105,6 +121,9 @@
 #define USART_CR3_CTSE		BIT(9)
 #define USART_CR3_CTSIE		BIT(10)
 #define USART_CR3_ONEBIT	BIT(11)
+#if CONFIG_MACH_STM32F746
+#define USART_CR3_OVRDIS	BIT(12)
+#endif
 
 /* USART_GTPR */
 #define USART_GTPR_PSC_MASK	GENMASK(7, 0)
@@ -160,7 +179,11 @@ static void stm32_receive_chars(struct uart_port *port)
 
 	while ((sr = readl_relaxed(port->membase + USART_SR)) & USART_SR_RXNE) {
 		sr |= USART_SR_DUMMY_RX;
+		#if CONFIG_MACH_STM32F746
+		c = readl_relaxed(port->membase + USART_RDR);
+		#else
 		c = readl_relaxed(port->membase + USART_DR);
+		#endif
 		flag = TTY_NORMAL;
 		port->icount.rx++;
 
@@ -202,7 +225,11 @@ static void stm32_transmit_chars(struct uart_port *port)
 	struct circ_buf *xmit = &port->state->xmit;
 
 	if (port->x_char) {
+		#if CONFIG_MACH_STM32F746
+		writel_relaxed(port->x_char, port->membase + USART_TDR);
+		#else
 		writel_relaxed(port->x_char, port->membase + USART_DR);
+		#endif
 		port->x_char = 0;
 		port->icount.tx++;
 		return;
@@ -217,8 +244,11 @@ static void stm32_transmit_chars(struct uart_port *port)
 		stm32_stop_tx(port);
 		return;
 	}
-
+	#if CONFIG_MACH_STM32F746
+	writel_relaxed(xmit->buf[xmit->tail], port->membase + USART_TDR);
+	#else
 	writel_relaxed(xmit->buf[xmit->tail], port->membase + USART_DR);
+	#endif
 	xmit->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
 	port->icount.tx++;
 
@@ -257,9 +287,17 @@ static unsigned int stm32_tx_empty(struct uart_port *port)
 static void stm32_set_mctrl(struct uart_port *port, unsigned int mctrl)
 {
 	if ((mctrl & TIOCM_RTS) && (port->status & UPSTAT_AUTORTS))
+	{
+#if CONFIG_MACH_STM32F746
+		stm32_set_bits(port, USART_CR3, USART_CR3_RTSE | USART_CR3_OVRDIS);
+#else
 		stm32_set_bits(port, USART_CR3, USART_CR3_RTSE);
+#endif
+	}
 	else
+	{
 		stm32_clr_bits(port, USART_CR3, USART_CR3_RTSE);
+	}
 }
 
 static unsigned int stm32_get_mctrl(struct uart_port *port)
@@ -381,7 +419,11 @@ static void stm32_set_termios(struct uart_port *port, struct ktermios *termios,
 	port->status &= ~(UPSTAT_AUTOCTS | UPSTAT_AUTORTS);
 	if (cflag & CRTSCTS) {
 		port->status |= UPSTAT_AUTOCTS | UPSTAT_AUTORTS;
+		#if CONFIG_MACH_STM32F746
+		cr3 |= USART_CR3_CTSE | USART_CR3_OVRDIS;
+		#else
 		cr3 |= USART_CR3_CTSE;
+		#endif
 	}
 
 	usartdiv = DIV_ROUND_CLOSEST(port->uartclk, baud);
@@ -610,8 +652,11 @@ static void stm32_console_putchar(struct uart_port *port, int ch)
 {
 	while (!(readl_relaxed(port->membase + USART_SR) & USART_SR_TXE))
 		cpu_relax();
-
+	#if CONFIG_MACH_STM32F746
+	writel_relaxed(ch, port->membase + USART_TDR);
+	#else
 	writel_relaxed(ch, port->membase + USART_DR);
+	#endif
 }
 
 static void stm32_console_write(struct console *co, const char *s, unsigned cnt)
