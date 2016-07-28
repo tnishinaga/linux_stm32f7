@@ -1,7 +1,7 @@
 #
 # Kconfig for uClinux(non-paged MM) depend configurations
 # Hyok S. Choi <hyok.choi@samsung.com>
-# 
+#
 
 config SET_MEM_PARAM
 	bool "Set flash/sdram size and base addr"
@@ -74,3 +74,8 @@ config ARM_MPU
 
           If your CPU has an MPU then you should choose 'y' here unless you
           know that you do not want to use the MPU.
+
+config CPU_CACHE_V7M
+        bool "ARMv7-M Cache Support"
+        depends on ARM_SINGLE_ARMV7M
+        depends on ARM_V7M_MPU
