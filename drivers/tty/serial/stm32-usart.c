@@ -10,6 +10,7 @@
 #define SUPPORT_SYSRQ
 #endif
 
+
 #include <linux/module.h>
 #include <linux/serial.h>
 #include <linux/console.h>
@@ -29,6 +30,159 @@
 
 #define DRIVER_NAME "stm32-usart"
 
+/* Register offsets */
+#ifdef CONFIG_MACH_STM32F746
+#define USART_CR1		0x00
+#define USART_CR2		0x04
+#define USART_CR3		0x08
+#define USART_BRR		0x0C
+#define USART_GTPR		0x10
+#define USART_RTOR		0x14
+#define USART_RQR		0x18
+#define USART_ISR		0x1C
+#define USART_ICR		0x20
+#define USART_RDR		0x24
+#define USART_TDR		0x28
+
+/* for compatibility with STM32F4xx */
+#define USART_SR		USART_ISR
+
+/* USART_CR1 */
+#define USART_CR1_UE		BIT(0)
+#define USART_CR1_RE		BIT(2)
+#define USART_CR1_TE		BIT(3)
+#define USART_CR1_IDLEIE	BIT(4)
+#define USART_CR1_RXNEIE	BIT(5)
+#define USART_CR1_TCIE		BIT(6)
+#define USART_CR1_TXEIE		BIT(7)
+#define USART_CR1_PEIE		BIT(8)
+#define USART_CR1_PS		BIT(9)
+#define USART_CR1_PCE		BIT(10)
+#define USART_CR1_WAKE		BIT(11)
+#define USART_CR1_M0		BIT(12)
+#define USART_CR1_OVER8	BIT(15)
+#define USART_CR1_DEDT0	BIT(16)
+#define USART_CR1_DEDT1	BIT(17)
+#define USART_CR1_DEDT2	BIT(18)
+#define USART_CR1_DEDT3	BIT(19)
+#define USART_CR1_DEDT4	BIT(20)
+#define USART_CR1_DEAT0	BIT(21)
+#define USART_CR1_DEAT1	BIT(22)
+#define USART_CR1_DEAT2	BIT(23)
+#define USART_CR1_DEAT3	BIT(24)
+#define USART_CR1_DEAT4	BIT(25)
+#define USART_CR1_RTOIE	BIT(26)
+#define USART_CR1_EOBIE	BIT(27)
+#define USART_CR1_M1		BIT(28)
+#define USART_CR1_IE_MASK	(GENMASK(8, 4) | GENMASK(27, 26))
+
+/* USART_CR2 */
+#define USART_CR2_ADDM7	BIT(4)
+#define USART_CR2_LBDL		BIT(5)
+#define USART_CR2_LBDIE	BIT(6)
+#define USART_CR2_LBCL		BIT(8)
+#define USART_CR2_CPHA		BIT(9)
+#define USART_CR2_CPOL		BIT(10)
+#define USART_CR2_CLKEN	BIT(11)
+#define USART_CR2_STOP_2B	BIT(13)
+#define USART_CR2_STOP_MASK	GENMASK(13, 12)
+#define USART_CR2_LINEN	BIT(14)
+#define USART_CR2_SWAP		BIT(15)
+#define USART_CR2_RXINV	BIT(16)
+#define USART_CR2_TXINV	BIT(17)
+#define USART_CR2_DATAINV	BIT(18)
+#define USART_CR2_MSBFIRST	BIT(19)
+#define USART_CR2_ABREN	BIT(20)
+#define USART_CR2_ABRMOD0	BIT(21)
+#define USART_CR2_ABRMOD1	BIT(22)
+#define USART_CR2_RTOEN	BIT(23)
+#define USART_CR2_ADD30_4B	BIT(24)
+#define USART_CR2_ADD74_4B	BIT(28)
+#define USART_CR2_ADD30_MASK	GENMASK(27, 24)
+#define USART_CR2_ADD74_MASK	GENMASK(31, 28)
+
+/* USART_CR3 */
+#define USART_CR3_EIE		BIT(0)
+#define USART_CR3_IREN		BIT(1)
+#define USART_CR3_IRLP		BIT(2)
+#define USART_CR3_HDSEL	BIT(3)
+#define USART_CR3_NACK		BIT(4)
+#define USART_CR3_SCEN		BIT(5)
+#define USART_CR3_DMAR		BIT(6)
+#define USART_CR3_DMAT		BIT(7)
+#define USART_CR3_RTSE		BIT(8)
+#define USART_CR3_CTSE		BIT(9)
+#define USART_CR3_CTSIE	BIT(10)
+#define USART_CR3_ONEBIT	BIT(11)
+#define USART_CR3_OVRDIS	BIT(12)
+#define USART_CR3_DDRE	BIT(13)
+#define USART_CR3_DEM	BIT(12)
+#define USART_CR3_DEP	BIT(15)
+#define USART_CR3_SCARCNT_3B	BIT(17)
+#define USART_CR3_SCARCNT_MASK	GENMASK(19, 17)
+
+/* USART_BRR */
+#define USART_BRR_DIV_F_MASK	GENMASK(3, 0)
+#define USART_BRR_DIV_M_MASK	GENMASK(15, 4)
+#define USART_BRR_DIV_M_SHIFT	4
+
+/* USART_GTPR */
+#define USART_GTPR_PSC_MASK	GENMASK(7, 0)
+#define USART_GTPR_GT_MASK	GENMASK(15, 8)
+
+/* USART_RTOR */
+#define USART_RTOR_RTO_MASK	GENMASK(23, 0)
+#define USART_RTOR_BLEN_MASK	GENMASK(31, 24)
+
+/* USART_RQR */
+#define USART_RQR_ABRRQ	BIT(0)
+#define USART_RQR_SBKRQ	BIT(1)
+#define USART_RQR_MMRQ	BIT(2)
+#define USART_RQR_RXFRQ	BIT(3)
+#define USART_RQR_TXFRQ	BIT(4)
+
+/* USART_SR(ISR) */
+#define USART_SR_PE		BIT(0)
+#define USART_SR_FE		BIT(1)
+#define USART_SR_NF		BIT(2)
+#define USART_SR_ORE		BIT(3)
+#define USART_SR_IDLE		BIT(4)
+#define USART_SR_RXNE		BIT(5)
+#define USART_SR_TC		BIT(6)
+#define USART_SR_TXE		BIT(7)
+#define USART_SR_LBD		BIT(8)
+#define USART_SR_CTSI		BIT(9)
+#define USART_SR_CTS		BIT(10)
+#define USART_SR_RTO		BIT(11)
+#define USART_SR_EOB		BIT(12)
+#define USART_SR_ABRE		BIT(14)
+#define USART_SR_ABRF		BIT(15)
+#define USART_SR_BUSY		BIT(16)
+#define USART_SR_CM		BIT(17)
+#define USART_SR_SBK		BIT(18)
+#define USART_SR_TEACK		BIT(21)
+#define USART_SR_ERR_MASK	(USART_SR_LBD | USART_SR_ORE | \
+				 USART_SR_FE | USART_SR_PE)
+/* Dummy bits */
+#define USART_SR_DUMMY_RX	BIT(31)
+
+/* USART_ICR */
+#define USART_ICR_PECF		BIT(0)
+#define USART_ICR_FECF		BIT(1)
+#define USART_ICR_NCF		BIT(2)
+#define USART_ICR_ORECF	BIT(3)
+#define USART_ICR_IDLECF	BIT(4)
+#define USART_ICR_TCCF		BIT(6)
+#define USART_ICR_LBDCF	BIT(8)
+#define USART_ICR_CTSCF	BIT(9)
+#define USART_ICR_RTOCF	BIT(11)
+#define USART_ICR_EOBCF	BIT(12)
+#define USART_ICR_CMCF		BIT(17)
+
+/* USART_DR */
+#define USART_DR_MASK		GENMASK(8, 0)
+
+#else /* STM32F4xx */
 /* Register offsets */
 #define USART_SR		0x00
 #define USART_DR		0x04
@@ -109,6 +263,8 @@
 /* USART_GTPR */
 #define USART_GTPR_PSC_MASK	GENMASK(7, 0)
 #define USART_GTPR_GT_MASK	GENMASK(15, 8)
+#endif /* CONFIG_MACH_STM32F746 */
+
 
 #define DRIVER_NAME "stm32-usart"
 #define STM32_SERIAL_NAME "ttyS"
@@ -160,7 +316,12 @@ static void stm32_receive_chars(struct uart_port *port)
 
 	while ((sr = readl_relaxed(port->membase + USART_SR)) & USART_SR_RXNE) {
 		sr |= USART_SR_DUMMY_RX;
+#ifdef CONFIG_MACH_STM32F746
+		c = readl_relaxed(port->membase + USART_RDR);
+		writel_relaxed(USART_ICR_ORECF, port->membase + USART_ICR);
+#else
 		c = readl_relaxed(port->membase + USART_DR);
+#endif
 		flag = TTY_NORMAL;
 		port->icount.rx++;
 
@@ -202,7 +363,11 @@ static void stm32_transmit_chars(struct uart_port *port)
 	struct circ_buf *xmit = &port->state->xmit;
 
 	if (port->x_char) {
+#ifdef CONFIG_MACH_STM32F746
+		writel_relaxed(port->x_char, port->membase + USART_TDR);
+#else
 		writel_relaxed(port->x_char, port->membase + USART_DR);
+#endif
 		port->x_char = 0;
 		port->icount.tx++;
 		return;
@@ -217,8 +382,11 @@ static void stm32_transmit_chars(struct uart_port *port)
 		stm32_stop_tx(port);
 		return;
 	}
-
+#ifdef CONFIG_MACH_STM32F746
+	writel_relaxed(xmit->buf[xmit->tail], port->membase + USART_TDR);
+#else
 	writel_relaxed(xmit->buf[xmit->tail], port->membase + USART_DR);
+#endif
 	xmit->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
 	port->icount.tx++;
 
@@ -256,10 +424,16 @@ static unsigned int stm32_tx_empty(struct uart_port *port)
 
 static void stm32_set_mctrl(struct uart_port *port, unsigned int mctrl)
 {
-	if ((mctrl & TIOCM_RTS) && (port->status & UPSTAT_AUTORTS))
+	if ((mctrl & TIOCM_RTS) && (port->status & UPSTAT_AUTORTS)) {
+#ifdef CONFIG_MACH_STM32F746
+		stm32_set_bits(port, USART_CR3, USART_CR3_RTSE
+			| USART_CR3_OVRDIS);
+#else
 		stm32_set_bits(port, USART_CR3, USART_CR3_RTSE);
-	else
+#endif
+	} else {
 		stm32_clr_bits(port, USART_CR3, USART_CR3_RTSE);
+	}
 }
 
 static unsigned int stm32_get_mctrl(struct uart_port *port)
@@ -372,7 +546,11 @@ static void stm32_set_termios(struct uart_port *port, struct ktermios *termios,
 	if (cflag & PARENB) {
 		cr1 |= USART_CR1_PCE;
 		if ((cflag & CSIZE) == CS8)
+#ifdef CONFIG_MACH_STM32F746
+			cr1 |= USART_CR1_M0 | USART_CR1_M1;
+#else
 			cr1 |= USART_CR1_M;
+#endif
 	}
 
 	if (cflag & PARODD)
@@ -381,7 +559,11 @@ static void stm32_set_termios(struct uart_port *port, struct ktermios *termios,
 	port->status &= ~(UPSTAT_AUTOCTS | UPSTAT_AUTORTS);
 	if (cflag & CRTSCTS) {
 		port->status |= UPSTAT_AUTOCTS | UPSTAT_AUTORTS;
+#ifdef CONFIG_MACH_STM32F746
+		cr3 |= USART_CR3_CTSE | USART_CR3_OVRDIS;
+#else
 		cr3 |= USART_CR3_CTSE;
+#endif
 	}
 
 	usartdiv = DIV_ROUND_CLOSEST(port->uartclk, baud);
@@ -610,8 +792,11 @@ static void stm32_console_putchar(struct uart_port *port, int ch)
 {
 	while (!(readl_relaxed(port->membase + USART_SR) & USART_SR_TXE))
 		cpu_relax();
-
+#ifdef CONFIG_MACH_STM32F746
+	writel_relaxed(ch, port->membase + USART_TDR);
+#else
 	writel_relaxed(ch, port->membase + USART_DR);
+#endif
 }
 
 static void stm32_console_write(struct console *co, const char *s, unsigned cnt)
