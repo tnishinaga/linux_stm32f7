@@ -273,6 +273,194 @@ void __init mpu_setup(void)
 			mpu_max_regions());
 	}
 }
+#elif CONFIG_ARM_V7M_MPU
+struct mpu_rgn_info mpu_rgn_info;
+
+static u32 type_read(void)
+{
+	return readl((void __iomem *)MPU_TYPE);
+}
+
+static void rnr_write(u32 v)
+{
+	writel(v, (void __iomem *)MPU_RNR);
+}
+
+static u32 rbar_read(void)
+{
+	return readl((void __iomem *)MPU_RBAR);
+}
+
+static void rbar_write(u32 v)
+{
+	writel(v, (void __iomem *)MPU_RBAR);
+}
+
+static void rasr_write(u32 v)
+{
+	writel(v, (void __iomem *)MPU_RASR);
+}
+
+
+/* MPU initialisation functions */
+void __init sanity_check_meminfo_mpu(void)
+{
+	phys_addr_t phys_offset = PHYS_OFFSET;
+	phys_addr_t aligned_region_size, specified_mem_size, rounded_mem_size;
+	struct memblock_region *reg;
+	bool first = true;
+	phys_addr_t mem_start;
+	phys_addr_t mem_end;
+
+	for_each_memblock(memory, reg) {
+		if (first) {
+			/*
+			 * Initially only use memory continuous from
+			 * PHYS_OFFSET
+			 */
+			if (reg->base != phys_offset)
+				panic("First memory bank must be contiguous from PHYS_OFFSET");
+
+			mem_start = reg->base;
+			mem_end = reg->base + reg->size;
+			specified_mem_size = reg->size;
+			first = false;
+		} else {
+			/*
+			 * memblock auto merges contiguous blocks, remove
+			 * all blocks afterwards in one go (we can't remove
+			 * blocks separately while iterating)
+			 */
+			pr_notice("Ignoring RAM after %pa, memory at %pa ignored\n",
+				  &mem_end, &reg->base);
+			memblock_remove(reg->base, 0 - reg->base);
+			break;
+		}
+	}
+
+	/*
+	 * MPU has curious alignment requirements: Size must be power of 2, and
+	 * region start must be aligned to the region size
+	 */
+	if (phys_offset != 0)
+		pr_info("PHYS_OFFSET != 0 => MPU Region size constrained by alignment requirements\n");
+
+	/*
+	 * Maximum aligned region might overflow phys_addr_t if phys_offset is
+	 * 0. Hence we keep everything below 4G until we take the smaller of
+	 * the aligned_region_size and rounded_mem_size, one of which is
+	 * guaranteed to be smaller than the maximum physical address.
+	 */
+	aligned_region_size = (phys_offset - 1) ^ (phys_offset);
+	/* Find the max power-of-two sized region that fits inside our bank */
+	rounded_mem_size = (1 <<  __fls(specified_mem_size)) - 1;
+
+	/* The actual region size is the smaller of the two */
+	aligned_region_size = aligned_region_size < rounded_mem_size
+				? aligned_region_size + 1
+				: rounded_mem_size + 1;
+
+	if (aligned_region_size != specified_mem_size) {
+		pr_warn("Truncating memory from %pa to %pa (MPU region constraints)",
+				&specified_mem_size, &aligned_region_size);
+		memblock_remove(mem_start + aligned_region_size,
+				specified_mem_size - aligned_region_size);
+
+		mem_end = mem_start + aligned_region_size;
+	}
+
+	pr_debug("MPU Region from %pa size %pa (end %pa))\n",
+		&phys_offset, &aligned_region_size, &mem_end);
+
+}
+
+static int mpu_max_regions(void)
+{
+	u32 type, region;
+
+	type = type_read();
+	region = (type >> 8) & 0xff;
+
+	return region;
+}
+
+static int mpu_min_region_order(void)
+{
+	u32 rbar_result;
+	/* We've kept a region free for this probing */
+	rnr_write(MPU_PROBE_REGION);
+	isb();
+	/*
+	 * As per ARM ARM, write 0xFFFFFFE0 to RBAR to find the minimum
+	 * region order
+	*/
+	rbar_write(0xFFFFFFE0);
+	rbar_result = rbar_read();
+	rbar_write(0x0);
+	isb(); /* Ensure that MPU region operations have completed */
+
+	return __ffs(rbar_result);
+}
+
+static int mpu_present(void)
+{
+	u32 region;
+
+	region = mpu_max_regions();
+
+	return region != 0 ? 1 : 0;
+}
+
+// static void sanity_check_meminfo_mpu(void) {}
+
+static int mpu_setup_region(unsigned int number, phys_addr_t start,
+			unsigned int size_order, u32 properties)
+{
+	u32 rbar, rasr;
+	u32 size_data;
+
+	/* We kept a region free for probing resolution of MPU regions*/
+	if (number > mpu_max_regions() || number == MPU_PROBE_REGION)
+		return -ENOENT;
+
+	if (size_order > 32)
+		return -ENOMEM;
+
+	if (size_order < mpu_min_region_order())
+		return -ENOMEM;
+
+	rbar = start | MPU_RBAR_VALID | number;
+	/* Writing N to bits 5:1 (MPU_RASR_SZ)  specifies region size 2^N+1 */
+	size_data = ((size_order - 1) << MPU_RASR_SZ) | 1 << MPU_RASR_EN;
+	rasr = properties | size_data;
+	dsb(); /* Ensure all previous data accesses occur with old mappings */
+	rbar_write(rbar);
+	rasr_write(rasr);
+	isb();
+
+	/* Store region info */
+	mpu_rgn_info.rgns[number].racr = properties;
+	mpu_rgn_info.rgns[number].rbar = start;
+	mpu_rgn_info.rgns[number].rsr = size_data;
+	return 0;
+}
+void __init mpu_setup(void)
+{
+	int region_err;
+
+	if (!mpu_present())
+		return;
+
+	region_err = mpu_setup_region(MPU_RAM_REGION, PHYS_OFFSET,
+					ilog2(memblock.memory.regions[0].size),
+					MPU_AP_PL1RW_PL0RW | MPU_RASR_NORMAL);
+	if (region_err) {
+		panic("MPU region initialization failure! %d", region_err);
+	} else {
+		pr_info("Using ARMv7M PMSA Compliant MPU. Max regions: %d\n",
+			mpu_max_regions());
+	}
+}
 #else
 static void sanity_check_meminfo_mpu(void) {}
 static void __init mpu_setup(void) {}

@@ -115,6 +115,28 @@ __v7m_setup:
 	str	r5, [r12, #11 * 4]	@ restore the original SVC vector entry
 	mov	lr, r6			@ restore LR
 
+#ifdef CONFIG_CPU_CACHE_V7M
+	stmia	sp, {r0-r7, lr}		@ v7_invalidate_l1 touches r0-r6
+	bl    v7m_invalidate_l1
+	@ invalidate I-Cache
+	ldr r0, =BASEADDR_V7M_SCS
+	mov r1, #0
+	str r1, [r0, #V7M_SCS_ICIALLU]
+	dsb
+	isb
+
+	/* Enable D&I-cache */
+	ldr r0, =0xE000ED14	@ CCR register
+	ldr r6, [r0]
+	mov r5, #0x07
+	lsl r5, r5, #16
+	orr r5, r5, r6
+	str r5, [r0]
+	dsb
+	isb
+	ldmia	sp, {r0-r7, lr}
+#endif
+
 	@ Special-purpose control register
 	mov	r1, #1
 	msr	control, r1		@ Thread mode has unpriviledged access
@@ -153,6 +175,9 @@ __v7m_proc_info:
 	.long	v7m_processor_functions	@ proc_info_list.proc
 	.long	0			@ proc_info_list.tlb
 	.long	0			@ proc_info_list.user
+#ifdef CONFIG_CPU_CACHE_NOP
 	.long	nop_cache_fns		@ proc_info_list.cache
+#else
+	.long v7m_cache_fns		@ proc_info_list.cache
+#endif
 	.size	__v7m_proc_info, . - __v7m_proc_info
-

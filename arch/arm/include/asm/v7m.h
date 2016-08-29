@@ -1,8 +1,22 @@
 /*
  * Common defines for v7m cpus
  */
+
+#define BASEADDR_V7M_SCS     IOMEM(0xE000E000)
 #define V7M_SCS_ICTR			IOMEM(0xe000e004)
 #define V7M_SCS_ICTR_INTLINESNUM_MASK		0x0000000f
+
+#define V7M_SCS_CTR            0xD7C
+#define V7M_SCS_CCSIDR    0xD80
+#define V7M_SCS_CSSELR    0xD84
+#define V7M_SCS_ICIALLU   0xF50
+#define V7M_SCS_ICIMVAU   0xF58
+#define V7M_SCS_DCIMVAC   0xF5C
+#define V7M_SCS_DCISW   0xF60
+#define V7M_SCS_DCCMVAC   0xF68
+#define V7M_SCS_DCCIMVAC  0xF70
+#define V7M_SCS_DCCISW      0xF74
+#define V7M_SCS_BPIALL           0xF78
 
 #define BASEADDR_V7M_SCB		IOMEM(0xe000ed00)
 

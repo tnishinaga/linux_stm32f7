@@ -62,3 +62,20 @@ config ARM_MPU
 
          If your CPU has an MPU then you should choose 'y' here unless you
          know that you do not want to use the MPU.
+
+ config ARM_V7M_MPU
+        bool 'Use the ARM v7m PMSA Compliant MPU'
+        depends on CPU_V7M
+        default n
+        help
+          Some ARM systems without an MMU have instead a Memory Protection
+          Unit (MPU) that defines the type and permissions for regions of
+          memory.
+
+          If your CPU has an MPU then you should choose 'y' here unless you
+          know that you do not want to use the MPU.
+
+config CPU_CACHE_V7M
+        bool "ARMv7-M Cache Support"
+        depends on ARM_SINGLE_ARMV7M
+        depends on ARM_V7M_MPU

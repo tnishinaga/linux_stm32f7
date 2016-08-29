@@ -66,7 +66,7 @@ ENTRY(stext)
 	movs	r10, r5				@ invalid processor (r5=0)?
 	beq	__error_p				@ yes, error 'p'
 
-#ifdef CONFIG_ARM_MPU
+#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARM_V7M_MPU)
 	/* Calculate the size of a region covering just the kernel */
 	ldr	r5, =PLAT_PHYS_OFFSET		@ Region start: PHYS_OFFSET
 	ldr     r6, =(_end)			@ Cover whole kernel
@@ -250,6 +250,75 @@ ENTRY(__setup_mpu)
 	mcr	p15, 0, r0, c1, c0, 0		@ Enable MPU
 	isb
 	ret	lr
+ENDPROC(__setup_mpu)
+#endif
+
+#ifdef CONFIG_ARM_V7M_MPU
+
+/* Setup a MPU region */
+.macro setup_region tmp, rbar, rasr
+	ldr \tmp, =MPU_RBAR
+	stm \tmp, {\rbar, \rasr}
+.endm
+
+/*
+ * Setup the MPU and initial MPU Regions. We create the following regions:
+ * Region 0: Use this for probing the MPU details, so leave disabled.
+ * Region 1: Background region - covers the whole of RAM as strongly ordered
+ * Region 2: Normal, Shared, cacheable for RAM. From PHYS_OFFSET, size from r6
+ * Region 3: Normal, shared, inaccessible from PL0 to protect the vectors page
+ *
+ * r6: Value to be written to DRSR (and IRSR if required) for MPU_RAM_REGION
+*/
+
+ENTRY(__setup_mpu)
+	dmb
+
+	/* Setup second region first to free up r6 */
+	ldr r5, =PLAT_PHYS_OFFSET
+	mov r0, #MPU_RBAR_VALID
+	orr r5, r5, r0
+	orr r5, r5, #MPU_RAM_REGION
+	ldr r0,=(MPU_AP_PL1RW_PL0RW | MPU_RASR_NORMAL)
+	orr r6, r6, r0
+	setup_region r0, r5, r6
+	isb
+
+	/* First/background region */
+	mov r5, #MPU_BG_REGION
+	orr r5, r5, #MPU_RBAR_VALID
+	ldr	r0,=(MPU_RASR_STRONGLY_ORDERED | MPU_AP_PL1RW_PL0RW)
+	mov	r6, #MPU_RASR_ALL_MEM		@ 4GB region, enabled
+	orr r6, r6, r0
+	setup_region r0, r5, r6
+	isb
+
+	/* Vectors region */
+	mov r5, #MPU_VECTORS_REGION
+	orr r5, r5, #MPU_RBAR_VALID
+	ldr	r0,=(MPU_AP_PL1RW_PL0NA | MPU_RASR_NORMAL)
+	mov	r6, #MPU_RASR_MAX_VEC		@ 256 word region, enabled
+	orr r6, r6, r0
+	setup_region r0, r5, r6
+	isb
+
+	/* Disable Region 0 */
+	mov r5, #MPU_PROBE_REGION
+	orr r5, r5, #MPU_RBAR_VALID
+	mov r6, #0
+	setup_region r0, r5, r6
+	isb
+
+	/* Enable the MPU */
+	ldr r0, =MPU_CTRL
+	mov r5, #(MPU_CTRL_ENABLE | MPU_CTRL_HFNMIENA)
+	str r5, [r0]
+	dsb
+	isb
+
+	ret lr
+
+
 ENDPROC(__setup_mpu)
 #endif
 #include "head-common.S"
