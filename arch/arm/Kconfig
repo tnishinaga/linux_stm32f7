@@ -341,7 +341,7 @@ config ARCH_MULTIPLATFORM
 	select USE_OF
 
 config ARM_SINGLE_ARMV7M
-	bool "ARMv7-M based platforms (Cortex-M0/M3/M4)"
+	bool "ARMv7-M based platforms (Cortex-M0/M3/M4/M7)"
 	depends on !MMU
 	select ARM_NVIC
 	select AUTO_ZRELADDR
@@ -881,10 +881,18 @@ config ARCH_STM32
 	help
 	  Support for STMicroelectronics STM32 processors.
 
-config MACH_STM32F429
-	bool "STMicrolectronics STM32F429"
-	depends on ARCH_STM32
-	default y
+	choice
+		prompt "SoC Name"
+		depends on ARCH_STM32
+		default MACH_STM32F429
+
+	config MACH_STM32F429
+		bool "STMicrolectronics STM32F429"
+
+	config MACH_STM32F746
+		bool "STMicrolectronics STM32F746"
+
+	endchoice
 
 config ARCH_MPS2
 	bool "ARM MPS2 platform"

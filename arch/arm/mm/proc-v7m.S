@@ -107,6 +107,9 @@ __v7m_setup:
 	mov	r6, lr			@ save LR
 	ldr	sp, =init_thread_union + THREAD_START_SP
 	cpsie	i
+#ifdef CONFIG_MACH_STM32F746
+	dsb
+#endif
 	svc	#0
 1:	cpsid	i
 	str	r5, [r12, #11 * 4]	@ restore the original SVC vector entry
